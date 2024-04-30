@@ -1,0 +1,7 @@
+gunicorn
+numpy
+pandas
+os
+dash
+plotly
+whitenoise

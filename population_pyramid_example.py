@@ -4,11 +4,13 @@ from dash import Dash, dcc, html, Input, Output
 import plotly.express as px
 import plotly.graph_objects as go
 
+UN_10_largest_countries_pop_estimates_df = pd.read_csv('./data/UN_10_largest_countries_pop_estimates.csv')
+
 app = Dash()
 
 app.layout = html.Div(
     children=[
-        html.H4("Population Pyramid China"),
+        html.H4("Population Pyramid"),
         dcc.Loading(
             id="loading",
             type="cube",
@@ -23,9 +25,11 @@ app.layout = html.Div(
 )
 
 def display_animated_graph(loading_states):
-    China_men_women = pd.read_csv("E:/Python/Dash_Apps/population_pyramid_example/data/China_pop_estimates_columns.csv")
+    India_men_women = UN_10_largest_countries_pop_estimates_df.loc[UN_10_largest_countries_pop_estimates_df['Country'] == 'India']
+    China_men_women = UN_10_largest_countries_pop_estimates_df.loc[UN_10_largest_countries_pop_estimates_df['Country'] == 'China']
+    Brazil_men_women = UN_10_largest_countries_pop_estimates_df.loc[UN_10_largest_countries_pop_estimates_df['Country'] == 'Brazil']
     return px.bar(
-        China_men_women,
+        India_men_women,
         x="Value",
         y="Age",
         animation_frame="Time",
