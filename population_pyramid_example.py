@@ -1,10 +1,12 @@
 import pandas as pd
 import dash
-from dash import Dash, dcc, html, Input, Output
+from dash import Dash, dcc, html, Input, Output, dash_table
 import plotly.express as px
 import plotly.graph_objects as go
 
 UN_10_largest_countries_pop_estimates_df = pd.read_csv('./data/UN_10_largest_countries_pop_estimates.csv')
+population_1950_2050_df = pd.read_csv('./data/population_1950_2050.csv')
+growth_1950_2050_df = pd.read_csv('./data/growth_1950_2050.csv')
 
 app = Dash()
 
@@ -17,6 +19,14 @@ app.layout = html.Div(
             type="cube",
             children=dcc.Graph(id='graph')
         ),
+        html.H4("Population Level"),
+        dash_table.DataTable(
+            data=population_1950_2050_df.to_dict('records')
+        ),
+        html.H4("Population Growth"),
+        dash_table.DataTable(
+            data=growth_1950_2050_df.to_dict('records')
+        )
     ]
 )
 

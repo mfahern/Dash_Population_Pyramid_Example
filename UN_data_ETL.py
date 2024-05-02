@@ -1,6 +1,9 @@
 import pandas as pd
 import numpy as np
 import os
+from pandasql import sqldf
+
+pysqldf = lambda q: sqldf(q, globals())
 
 data_estimates_male = pd.read_excel("./data/WPP2022_POP_F02_2_POPULATION_5-YEAR_AGE_GROUPS_MALE.xlsx", header=16)
 data_projections_male = pd.read_excel("./data/WPP2022_POP_F02_2_POPULATION_5-YEAR_AGE_GROUPS_MALE.xlsx", sheet_name="Medium variant", header=16)
@@ -97,3 +100,94 @@ UN_10_largest_countries_pop_estimates = pd.concat([
 ])
 
 UN_10_largest_countries_pop_estimates.to_csv('./data/UN_10_largest_countries_pop_estimates.csv')
+
+working_age_growth_df = pd.DataFrame()
+working_age_growth_df = UN_10_largest_countries_pop_estimates.loc[UN_10_largest_countries_pop_estimates['Sex'] == 'Male']
+
+working_age_growth_df['Value'] = working_age_growth_df['Value'] * -1
+
+working_age_growth_df = pd.concat([working_age_growth_df, UN_10_largest_countries_pop_estimates.loc[UN_10_largest_countries_pop_estimates['Sex'] == 'Female']])
+
+working_age_df = pysqldf("SELECT * FROM working_age_growth_df WHERE Age in (19,24,29,34,39,44,49,54,59,64);")
+
+aggregated_working_age_growth_df = pysqldf("SELECT Time, Sex, SUM(Value) AS 'Working Age Population', Country FROM working_age_df GROUP BY Country, Time, Sex;")
+
+male_aggregated_working_age_growth_df = aggregated_working_age_growth_df.loc[aggregated_working_age_growth_df['Sex'] == 'Male']
+female_aggregated_working_age_growth_df = aggregated_working_age_growth_df.loc[aggregated_working_age_growth_df['Sex'] == 'Female']
+
+filtered_male_aggregated_working_age_growth_df = male_aggregated_working_age_growth_df.loc[(male_aggregated_working_age_growth_df['Time'] <= 2050) & (male_aggregated_working_age_growth_df['Time'] % 10 == 0)]
+filtered_female_aggregated_working_age_growth_df = female_aggregated_working_age_growth_df.loc[(female_aggregated_working_age_growth_df['Time'] <= 2050) & (female_aggregated_working_age_growth_df['Time'] % 10 == 0)]
+
+filtered_all_aggregated_working_age_growth_df = pd.DataFrame()
+filtered_all_aggregated_working_age_growth_df['Time'] = filtered_male_aggregated_working_age_growth_df['Time']
+filtered_all_aggregated_working_age_growth_df['Country'] = filtered_male_aggregated_working_age_growth_df['Country']
+filtered_all_aggregated_working_age_growth_df['Working Age Population'] = list(filtered_female_aggregated_working_age_growth_df.set_index('Time')['Working Age Population'] + filtered_male_aggregated_working_age_growth_df.set_index('Time')['Working Age Population'])
+
+pivot_filtered_male_aggregated_working_age_growth_df = filtered_male_aggregated_working_age_growth_df.pivot(index='Time', columns=['Country'], values='Working Age Population')
+pivot_filtered_female_aggregated_working_age_growth_df = filtered_female_aggregated_working_age_growth_df.pivot(index='Time', columns=['Country'], values='Working Age Population')
+pivot_filtered_all_aggregated_working_age_growth_df = filtered_all_aggregated_working_age_growth_df.pivot(index='Time', columns=['Country'], values='Working Age Population')
+
+all_pct_change_df = pivot_filtered_all_aggregated_working_age_growth_df.pct_change()
+
+all_joined_df = pivot_filtered_all_aggregated_working_age_growth_df.join(all_pct_change_df, on=['Time'],  lsuffix=' Working Age Population', rsuffix=' Working Age Growth')
+
+arrays = [
+    np.array(["Bangladesh","Bangladesh", "Brazil", "Brazil","China", "China","India", "India","Indonesia", "Indonesia","Mexico","Mexico", "Nigeria","Nigeria", "Pakistan","Pakistan", "Russia","Russia", "United States","United States"]),
+    np.array(["Population","Growth","Population","Growth","Population","Growth","Population","Growth","Population","Growth","Population","Growth","Population","Growth","Population","Growth","Population","Growth","Population","Growth"]),
+]
+
+pop_growth_multi_df = pd.DataFrame(columns=arrays)
+pop_growth_multi_df['Bangladesh','Population'] = all_joined_df['Bangladesh Working Age Population']/1000
+pop_growth_multi_df['Bangladesh','Growth'] = all_joined_df['Bangladesh Working Age Growth']
+pop_growth_multi_df['Brazil','Population'] = all_joined_df['Brazil Working Age Population']/1000
+pop_growth_multi_df['Brazil','Growth'] = all_joined_df['Brazil Working Age Growth']
+pop_growth_multi_df['China','Population'] = all_joined_df['China Working Age Population']/1000
+pop_growth_multi_df['China','Growth'] = all_joined_df['China Working Age Growth']
+pop_growth_multi_df['India','Population'] = all_joined_df['India Working Age Population']/1000
+pop_growth_multi_df['India','Growth'] = all_joined_df['India Working Age Growth']
+pop_growth_multi_df['Indonesia','Population'] = all_joined_df['Indonesia Working Age Population']/1000
+pop_growth_multi_df['Indonesia','Growth'] = all_joined_df['Indonesia Working Age Growth']
+pop_growth_multi_df['Mexico','Population'] = all_joined_df['Mexico Working Age Population']/1000
+pop_growth_multi_df['Mexico','Growth'] = all_joined_df['Mexico Working Age Growth']
+pop_growth_multi_df['Nigeria','Population'] = all_joined_df['Nigeria Working Age Population']/1000
+pop_growth_multi_df['Nigeria','Growth'] = all_joined_df['Nigeria Working Age Growth']
+pop_growth_multi_df['Pakistan','Population'] = all_joined_df['Pakistan Working Age Population']/1000
+pop_growth_multi_df['Pakistan','Growth'] = all_joined_df['Pakistan Working Age Growth']
+pop_growth_multi_df['Russia','Population'] = all_joined_df['Russian Federation Working Age Population']/1000
+pop_growth_multi_df['Russia','Growth'] = all_joined_df['Russian Federation Working Age Growth']
+pop_growth_multi_df['United States','Population'] = all_joined_df['United States of America Working Age Population']/1000
+pop_growth_multi_df['United States','Growth'] = all_joined_df['United States of America Working Age Growth']
+
+pop_growth_multi_df = pop_growth_multi_df.fillna(0)
+
+pop_growth_multi_df['Bangladesh','Population'] = pop_growth_multi_df['Bangladesh','Population'].map("{:,.2f}M".format)
+pop_growth_multi_df['Bangladesh','Growth'] = pop_growth_multi_df['Bangladesh','Growth'].map("{:,.1%}".format)
+pop_growth_multi_df['Brazil','Population'] = pop_growth_multi_df['Brazil','Population'].map("{:,.2f}M".format)
+pop_growth_multi_df['Brazil','Growth'] = pop_growth_multi_df['Brazil','Growth'].map("{:,.1%}".format)
+pop_growth_multi_df['China','Population'] = pop_growth_multi_df['China','Population'].map("{:,.2f}M".format)
+pop_growth_multi_df['China','Growth'] = pop_growth_multi_df['China','Growth'].map("{:,.1%}".format)
+pop_growth_multi_df['India','Population'] = pop_growth_multi_df['India','Population'].map("{:,.2f}M".format)
+pop_growth_multi_df['India','Growth'] = pop_growth_multi_df['India','Growth'].map("{:,.1%}".format)
+pop_growth_multi_df['Indonesia','Population'] = pop_growth_multi_df['Indonesia','Population'].map("{:,.2f}M".format)
+pop_growth_multi_df['Indonesia','Growth'] = pop_growth_multi_df['Indonesia','Growth'].map("{:,.1%}".format)
+pop_growth_multi_df['Mexico','Population'] = pop_growth_multi_df['Mexico','Population'].map("{:,.2f}M".format)
+pop_growth_multi_df['Mexico','Growth'] = pop_growth_multi_df['Mexico','Growth'].map("{:,.1%}".format)
+pop_growth_multi_df['Nigeria','Population'] = pop_growth_multi_df['Nigeria','Population'].map("{:,.2f}".format)
+pop_growth_multi_df['Nigeria','Growth'] = pop_growth_multi_df['Nigeria','Growth'].map("{:,.1%}".format)
+pop_growth_multi_df['Pakistan','Population'] = pop_growth_multi_df['Pakistan','Population'].map("{:,.2f}M".format)
+pop_growth_multi_df['Pakistan','Growth'] = pop_growth_multi_df['Pakistan','Growth'].map("{:,.1%}".format)
+pop_growth_multi_df['Russia','Population'] = pop_growth_multi_df['Russia','Population'].map("{:,.2f}M".format)
+pop_growth_multi_df['Russia','Growth'] = pop_growth_multi_df['Russia','Growth'].map("{:,.1%}".format)
+pop_growth_multi_df['United States','Population'] = pop_growth_multi_df['United States','Population'].map("{:,.2f}M".format)
+pop_growth_multi_df['United States','Growth'] = pop_growth_multi_df['United States','Growth'].map("{:,.1%}".format)
+
+population_1950_2050_df = pop_growth_multi_df.xs('Population', level=1, axis = 1)
+growth_1950_2050_df = pop_growth_multi_df.xs('Growth', level=1, axis = 1)
+
+population_1950_2050_df.to_csv('./data/population_1950_2050.csv')
+growth_1950_2050_df.to_csv('./data/growth_1950_2050.csv')
+
+
+
+
+
