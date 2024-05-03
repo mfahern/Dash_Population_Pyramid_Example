@@ -9,7 +9,7 @@ from whitenoise import WhiteNoise
 app = Dash()
 server = app.server
 
-server.wsgi_app = WhiteNoise(server.wsgi_app, root='data/')
+#server.wsgi_app = WhiteNoise(server.wsgi_app, root='data/')
 
 UN_10_largest_countries_pop_estimates_df = pd.read_csv('https://github.com/mfahern/Dash_Population_Pyramid_Example/tree/main/data/UN_10_largest_countries_pop_estimates.csv')
 pop_growth_multi_df = pd.read_csv('https://github.com/mfahern/Dash_Population_Pyramid_Example/tree/main/data/pop_growth_multi.csv', skiprows=[2])
