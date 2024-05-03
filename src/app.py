@@ -6,10 +6,10 @@ import plotly.graph_objects as go
 import gunicorn
 from whitenoise import WhiteNoise
 
-UN_10_largest_countries_pop_estimates_df = pd.read_csv('src/data/UN_10_largest_countries_pop_estimates.csv')
-pop_growth_multi_df = pd.read_csv('src/data/pop_growth_multi.csv', skiprows=[2])
-population_1950_2050_df = pd.read_csv('src/data/population_1950_2050.csv')
-growth_1950_2050_df = pd.read_csv('src/data/growth_1950_2050.csv')
+UN_10_largest_countries_pop_estimates_df = pd.read_csv('UN_10_largest_countries_pop_estimates.csv')
+pop_growth_multi_df = pd.read_csv('pop_growth_multi.csv', skiprows=[2])
+population_1950_2050_df = pd.read_csv('population_1950_2050.csv')
+growth_1950_2050_df = pd.read_csv('growth_1950_2050.csv')
 
 pop_growth_multi_df.rename(columns={'Unnamed: 0':'Year', 'Bangladesh':'Bangladesh', 'Bangladesh.1':'Bangladesh', 'Brazil':'Brazil', 'Brazil.1':'Brazil',
        'China':'China', 'China.1':'China', 'India':'India', 'India.1':'India', 'Indonesia':'Indonesia', 'Indonesia.1':'Indonesia',
