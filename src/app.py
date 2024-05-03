@@ -6,21 +6,20 @@ import plotly.graph_objects as go
 import gunicorn
 from whitenoise import WhiteNoise
 
-UN_10_largest_countries_pop_estimates_df = pd.read_csv('UN_10_largest_countries_pop_estimates.csv')
-pop_growth_multi_df = pd.read_csv('pop_growth_multi.csv', skiprows=[2])
-population_1950_2050_df = pd.read_csv('population_1950_2050.csv')
-growth_1950_2050_df = pd.read_csv('growth_1950_2050.csv')
+app = Dash()
+server = app.server
+
+server.wsgi_app = WhiteNoise(server.wsgi_app, root='data/')
+
+UN_10_largest_countries_pop_estimates_df = pd.read_csv('data/UN_10_largest_countries_pop_estimates.csv')
+pop_growth_multi_df = pd.read_csv('data/pop_growth_multi.csv', skiprows=[2])
+population_1950_2050_df = pd.read_csv('data/population_1950_2050.csv')
+growth_1950_2050_df = pd.read_csv('data/growth_1950_2050.csv')
 
 pop_growth_multi_df.rename(columns={'Unnamed: 0':'Year', 'Bangladesh':'Bangladesh', 'Bangladesh.1':'Bangladesh', 'Brazil':'Brazil', 'Brazil.1':'Brazil',
        'China':'China', 'China.1':'China', 'India':'India', 'India.1':'India', 'Indonesia':'Indonesia', 'Indonesia.1':'Indonesia',
        'Mexico':'Mexico', 'Mexico.1':'Mexico', 'Nigeria':'Nigeria', 'Nigeria.1':'Nigeria', 'Pakistan':'Pakistan', 'Pakistan.1':'Pakistan',
        'Russia':'Russia', 'Russia.1':'Russia', 'United States':'United States', 'United States.1':'United States'}, inplace=True)
-
-
-app = Dash()
-server = app.server
-
-server.wsgi_app = WhiteNoise(server.wsgi_app, root='data/')
 
 app.layout = html.Div(
     style={
