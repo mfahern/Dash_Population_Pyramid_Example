@@ -1,8 +1,8 @@
-gunicorn
-numpy
-pandas
-os
-dash
-plotly
-whitenoise
-pandasql
+gunicorn==20.0.4
+numpy==1.23.4
+pandas==2.2.2
+dash==2.6.1
+plotly==5.10.0
+plotly-express==0.4.1
+whitenoise==6.6.0
+pandasql==0.7.3
