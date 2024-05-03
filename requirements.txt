@@ -6,4 +6,4 @@ plotly==5.10.0
 plotly-express==0.4.1
 whitenoise==6.6.0
 pandasql==0.7.3
-dashtools
+dash-tools
