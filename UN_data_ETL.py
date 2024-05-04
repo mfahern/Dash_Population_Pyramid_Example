@@ -78,35 +78,28 @@ def country_data_extraction(country):
         return pop_estimates_columns_df
     except:
         if country not in UN_countries_set:
-           raise Exception('Country is not the UN name of a specific jurisdiction.')
+           raise Exception(f'{country} is not the UN name of a specific jurisdiction.')
 
-India_pop_estimates_df = country_data_extraction('India')
-China_pop_estimates_df = country_data_extraction('China')
-United_States_pop_estimates_df = country_data_extraction('United States of America')
-Indonesia_pop_estimates_df = country_data_extraction('Indonesia')
-Pakistan_pop_estimates_df = country_data_extraction('Pakistan')
-Nigeria_pop_estimates_df = country_data_extraction('Nigeria')
-Brazil_pop_estimates_df = country_data_extraction('Brazil')
-Bangladesh_pop_estimates_df = country_data_extraction('Bangladesh')
-Russia_pop_estimates_df = country_data_extraction('Russian Federation')
-Mexico_pop_estimates_df = country_data_extraction('Mexico')
+selected_countries = ['Afghanistan','Bangladesh','Brazil','China','India','Indonesia','Japan','Mexico','Nigeria','Pakistan','Republic of Korea','Russian Federation','United States of America' ]
 
-UN_10_largest_countries_pop_estimates = pd.concat([
-    India_pop_estimates_df, China_pop_estimates_df,
-    United_States_pop_estimates_df, Indonesia_pop_estimates_df, 
-    Pakistan_pop_estimates_df, Nigeria_pop_estimates_df, 
-    Brazil_pop_estimates_df, Bangladesh_pop_estimates_df,
-    Russia_pop_estimates_df, Mexico_pop_estimates_df
-])
+selected_countries_ls = list()
+selected_countries_df_ls = list()
 
-UN_10_largest_countries_pop_estimates.to_csv('./data/UN_10_largest_countries_pop_estimates.csv')
+for country in selected_countries:
+    selected_countries_ls.append(f'{country}_pop_estimates_df')
+
+for country, country_df in zip(selected_countries, selected_countries_ls):
+    country_df = country_data_extraction(country)
+    selected_countries_df_ls.append(country_df)
+
+UN_countries_pop_estimates = pd.concat(selected_countries_df_ls)
 
 working_age_growth_df = pd.DataFrame()
-working_age_growth_df = UN_10_largest_countries_pop_estimates.loc[UN_10_largest_countries_pop_estimates['Sex'] == 'Male']
+working_age_growth_df = UN_countries_pop_estimates.loc[UN_countries_pop_estimates['Sex'] == 'Male']
 
 working_age_growth_df['Value'] = working_age_growth_df['Value'] * -1
 
-working_age_growth_df = pd.concat([working_age_growth_df, UN_10_largest_countries_pop_estimates.loc[UN_10_largest_countries_pop_estimates['Sex'] == 'Female']])
+working_age_growth_df = pd.concat([working_age_growth_df, UN_countries_pop_estimates.loc[UN_countries_pop_estimates['Sex'] == 'Female']])
 
 working_age_df = pysqldf("SELECT * FROM working_age_growth_df WHERE Age in (19,24,29,34,39,44,49,54,59,64);")
 
@@ -131,59 +124,38 @@ all_pct_change_df = pivot_filtered_all_aggregated_working_age_growth_df.pct_chan
 
 all_joined_df = pivot_filtered_all_aggregated_working_age_growth_df.join(all_pct_change_df, on=['Time'],  lsuffix=' Working Age Population', rsuffix=' Working Age Growth')
 
+double_selected_countries = sorted(selected_countries*2)
+
+population_growth_ls = ["Population", "Growth"]
+match_size_population_growth_ls = population_growth_ls * len(selected_countries)
+
 arrays = [
-    np.array(["Bangladesh","Bangladesh", "Brazil", "Brazil","China", "China","India", "India","Indonesia", "Indonesia","Mexico","Mexico", "Nigeria","Nigeria", "Pakistan","Pakistan", "Russia","Russia", "United States","United States"]),
-    np.array(["Population","Growth","Population","Growth","Population","Growth","Population","Growth","Population","Growth","Population","Growth","Population","Growth","Population","Growth","Population","Growth","Population","Growth"]),
+    np.array(double_selected_countries),
+    np.array(match_size_population_growth_ls),
 ]
 
 pop_growth_multi_df = pd.DataFrame(columns=arrays)
-pop_growth_multi_df['Bangladesh','Population'] = all_joined_df['Bangladesh Working Age Population']/1000
-pop_growth_multi_df['Bangladesh','Growth'] = all_joined_df['Bangladesh Working Age Growth']
-pop_growth_multi_df['Brazil','Population'] = all_joined_df['Brazil Working Age Population']/1000
-pop_growth_multi_df['Brazil','Growth'] = all_joined_df['Brazil Working Age Growth']
-pop_growth_multi_df['China','Population'] = all_joined_df['China Working Age Population']/1000
-pop_growth_multi_df['China','Growth'] = all_joined_df['China Working Age Growth']
-pop_growth_multi_df['India','Population'] = all_joined_df['India Working Age Population']/1000
-pop_growth_multi_df['India','Growth'] = all_joined_df['India Working Age Growth']
-pop_growth_multi_df['Indonesia','Population'] = all_joined_df['Indonesia Working Age Population']/1000
-pop_growth_multi_df['Indonesia','Growth'] = all_joined_df['Indonesia Working Age Growth']
-pop_growth_multi_df['Mexico','Population'] = all_joined_df['Mexico Working Age Population']/1000
-pop_growth_multi_df['Mexico','Growth'] = all_joined_df['Mexico Working Age Growth']
-pop_growth_multi_df['Nigeria','Population'] = all_joined_df['Nigeria Working Age Population']/1000
-pop_growth_multi_df['Nigeria','Growth'] = all_joined_df['Nigeria Working Age Growth']
-pop_growth_multi_df['Pakistan','Population'] = all_joined_df['Pakistan Working Age Population']/1000
-pop_growth_multi_df['Pakistan','Growth'] = all_joined_df['Pakistan Working Age Growth']
-pop_growth_multi_df['Russia','Population'] = all_joined_df['Russian Federation Working Age Population']/1000
-pop_growth_multi_df['Russia','Growth'] = all_joined_df['Russian Federation Working Age Growth']
-pop_growth_multi_df['United States','Population'] = all_joined_df['United States of America Working Age Population']/1000
-pop_growth_multi_df['United States','Growth'] = all_joined_df['United States of America Working Age Growth']
 
-pop_growth_multi_df = pop_growth_multi_df.fillna(0)
+all_joined_df_columns_sorted = sorted(all_joined_df.columns)
 
-pop_growth_multi_df['Bangladesh','Population'] = pop_growth_multi_df['Bangladesh','Population'].map("{:,.2f}M".format)
-pop_growth_multi_df['Bangladesh','Growth'] = pop_growth_multi_df['Bangladesh','Growth'].map("{:,.1%}".format)
-pop_growth_multi_df['Brazil','Population'] = pop_growth_multi_df['Brazil','Population'].map("{:,.2f}M".format)
-pop_growth_multi_df['Brazil','Growth'] = pop_growth_multi_df['Brazil','Growth'].map("{:,.1%}".format)
-pop_growth_multi_df['China','Population'] = pop_growth_multi_df['China','Population'].map("{:,.2f}M".format)
-pop_growth_multi_df['China','Growth'] = pop_growth_multi_df['China','Growth'].map("{:,.1%}".format)
-pop_growth_multi_df['India','Population'] = pop_growth_multi_df['India','Population'].map("{:,.2f}M".format)
-pop_growth_multi_df['India','Growth'] = pop_growth_multi_df['India','Growth'].map("{:,.1%}".format)
-pop_growth_multi_df['Indonesia','Population'] = pop_growth_multi_df['Indonesia','Population'].map("{:,.2f}M".format)
-pop_growth_multi_df['Indonesia','Growth'] = pop_growth_multi_df['Indonesia','Growth'].map("{:,.1%}".format)
-pop_growth_multi_df['Mexico','Population'] = pop_growth_multi_df['Mexico','Population'].map("{:,.2f}M".format)
-pop_growth_multi_df['Mexico','Growth'] = pop_growth_multi_df['Mexico','Growth'].map("{:,.1%}".format)
-pop_growth_multi_df['Nigeria','Population'] = pop_growth_multi_df['Nigeria','Population'].map("{:,.2f}".format)
-pop_growth_multi_df['Nigeria','Growth'] = pop_growth_multi_df['Nigeria','Growth'].map("{:,.1%}".format)
-pop_growth_multi_df['Pakistan','Population'] = pop_growth_multi_df['Pakistan','Population'].map("{:,.2f}M".format)
-pop_growth_multi_df['Pakistan','Growth'] = pop_growth_multi_df['Pakistan','Growth'].map("{:,.1%}".format)
-pop_growth_multi_df['Russia','Population'] = pop_growth_multi_df['Russia','Population'].map("{:,.2f}M".format)
-pop_growth_multi_df['Russia','Growth'] = pop_growth_multi_df['Russia','Growth'].map("{:,.1%}".format)
-pop_growth_multi_df['United States','Population'] = pop_growth_multi_df['United States','Population'].map("{:,.2f}M".format)
-pop_growth_multi_df['United States','Growth'] = pop_growth_multi_df['United States','Growth'].map("{:,.1%}".format)
+for i in range(1, len(double_selected_countries), 2):
+    col_name = all_joined_df_columns_sorted[i]
+    country_name = double_selected_countries[i]
+    pop_growth_multi_df[country_name, 'Population'] = all_joined_df[col_name]/1000
+    pop_growth_multi_df[country_name, 'Population'] = pop_growth_multi_df[country_name, 'Population'].map("{:,.2f}M".format)
+
+for i in range(0, len(match_size_population_growth_ls), 2):
+    col_name = all_joined_df_columns_sorted[i]  
+    country_name = double_selected_countries[i]
+    pop_growth_multi_df[country_name, 'Growth'] = all_joined_df[col_name]
+    pop_growth_multi_df = pop_growth_multi_df.fillna(0)
+    pop_growth_multi_df[country_name, 'Growth'] = pop_growth_multi_df[country_name, 'Growth'].map("{:,.1%}".format)
 
 population_1950_2050_df = pop_growth_multi_df.xs('Population', level=1, axis = 1)
 growth_1950_2050_df = pop_growth_multi_df.xs('Growth', level=1, axis = 1)
 
+UN_countries_pop_estimates.to_csv('./data/UN_countries_pop_estimates.csv')
+pop_growth_multi_df.to_csv('./data/pop_growth_multi.csv')
 population_1950_2050_df.to_csv('./data/population_1950_2050.csv')
 growth_1950_2050_df.to_csv('./data/growth_1950_2050.csv')
 

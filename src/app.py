@@ -11,7 +11,7 @@ server = app.server
 
 #server.wsgi_app = WhiteNoise(server.wsgi_app, root='data/')
 
-UN_10_largest_countries_pop_estimates_df = pd.read_csv('https://raw.githubusercontent.com/mfahern/Dash_Population_Pyramid_Example/main/data/UN_10_largest_countries_pop_estimates.csv')
+UN_countries_pop_estimates_df = pd.read_csv('https://raw.githubusercontent.com/mfahern/Dash_Population_Pyramid_Example/main/data/UN_countries_pop_estimates.csv')
 pop_growth_multi_df = pd.read_csv('https://raw.githubusercontent.com/mfahern/Dash_Population_Pyramid_Example/main/data/pop_growth_multi.csv', skiprows=[2])
 population_1950_2050_df = pd.read_csv('https://raw.githubusercontent.com/mfahern/Dash_Population_Pyramid_Example/main/data/population_1950_2050.csv')
 growth_1950_2050_df = pd.read_csv('https://raw.githubusercontent.com/mfahern/Dash_Population_Pyramid_Example/main/data/growth_1950_2050.csv')
@@ -30,13 +30,14 @@ app.layout = html.Div(
     },
     children=[
         dcc.Dropdown(['India','China','United States of America','Indonesia','Pakistan','Nigeria','Brazil','Bangladesh','Russia','Mexico'], 'India', id='country_dropdown'),
-        html.H4("Population Pyramid"),
+        html.H3("Population Pyramid"),
+        html.P("UN Population Projections 2023 Midyear Medium Varient Estimates (1950-2100)"), 
         dcc.Loading(
             id='loading',
             type="cube",
             children=dcc.Graph(id='graph')
         ),
-        html.H4("Working Age Population Level and Growth", style={'textAlign':'center'}),
+        html.H3("Working Age Population Level and Growth"),
         dash_table.DataTable(
             columns=[
             {"name": ["", ""], "id":"year"},
@@ -125,39 +126,12 @@ app.layout = html.Div(
     Output('graph', 'figure'),
     Input('country_dropdown', 'value'),
 )
-
-def create_country_bar(value):
-    match value:
-        case 'China':
-            country_selected = UN_10_largest_countries_pop_estimates_df.loc[UN_10_largest_countries_pop_estimates_df['Country'] == 'China']
-            population_pyramid_fig = px.bar(country_selected, x="Value", y="Age", animation_frame="Time", orientation="h", color="Sex", height=1000,)
-        case 'India':
-            country_selected = UN_10_largest_countries_pop_estimates_df.loc[UN_10_largest_countries_pop_estimates_df['Country'] == 'India']
-            population_pyramid_fig = px.bar(country_selected, x="Value", y="Age", animation_frame="Time", orientation="h", color="Sex", height=1000,)
-        case 'United States of America':
-            country_selected = UN_10_largest_countries_pop_estimates_df.loc[UN_10_largest_countries_pop_estimates_df['Country'] == 'United States of America']
-            population_pyramid_fig = px.bar(country_selected, x="Value", y="Age", animation_frame="Time", orientation="h", color="Sex", height=1000,)
-        case 'Indonesia':
-            country_selected = UN_10_largest_countries_pop_estimates_df.loc[UN_10_largest_countries_pop_estimates_df['Country'] == 'Indonesia']
-            population_pyramid_fig = px.bar(country_selected, x="Value", y="Age", animation_frame="Time", orientation="h", color="Sex", height=1000,)
-        case 'Pakistan':
-            country_selected = UN_10_largest_countries_pop_estimates_df.loc[UN_10_largest_countries_pop_estimates_df['Country'] == 'Pakistan']
-            population_pyramid_fig = px.bar(country_selected, x="Value", y="Age", animation_frame="Time", orientation="h", color="Sex", height=1000,)
-        case 'Nigeria':
-            country_selected = UN_10_largest_countries_pop_estimates_df.loc[UN_10_largest_countries_pop_estimates_df['Country'] == 'Nigeria']
-            population_pyramid_fig = px.bar(country_selected, x="Value", y="Age", animation_frame="Time", orientation="h", color="Sex", height=1000,)
-        case 'Brazil':
-            country_selected = UN_10_largest_countries_pop_estimates_df.loc[UN_10_largest_countries_pop_estimates_df['Country'] == 'Brazil']
-            population_pyramid_fig = px.bar(country_selected, x="Value", y="Age", animation_frame="Time", orientation="h", color="Sex", height=1000,)
-        case 'Bangladesh':
-            country_selected = UN_10_largest_countries_pop_estimates_df.loc[UN_10_largest_countries_pop_estimates_df['Country'] == 'Bangladesh']
-            population_pyramid_fig = px.bar(country_selected, x="Value", y="Age", animation_frame="Time", orientation="h", color="Sex", height=1000,)
-        case 'Russia':
-            country_selected = UN_10_largest_countries_pop_estimates_df.loc[UN_10_largest_countries_pop_estimates_df['Country'] == 'Russian Federation']
-            population_pyramid_fig = px.bar(country_selected, x="Value", y="Age", animation_frame="Time", orientation="h", color="Sex", height=1000,)
-        case 'Mexico':
-            country_selected = UN_10_largest_countries_pop_estimates_df.loc[UN_10_largest_countries_pop_estimates_df['Country'] == 'Mexico']
-            population_pyramid_fig = px.bar(country_selected, x="Value", y="Age", animation_frame="Time", orientation="h", color="Sex", height=1000,)
+def bar_fig(value):
+    country_selected = UN_countries_pop_estimates_df.loc[UN_countries_pop_estimates_df['Country'] == f'{value}']
+    population_pyramid_fig = px.bar(country_selected, x="Value", y="Age", animation_frame="Time", orientation="h", color="Sex", color_discrete_map={'Male':'#3260F2', 'Female':'#C00000'}, height=1000,)
+    population_pyramid_fig.update_traces(width=4.9)
+#TODO fix hovertemplate to show ages are 5 year brackets
+#    population_pyramid_fig.update_traces(hovertemplate=f"Sex: {UN_countries_pop_estimates_df['Sex'][0]}"+f"Time: {UN_countries_pop_estimates_df['Time']}"+f"Count: {UN_countries_pop_estimates_df['Value']}"+f"Age: {UN_countries_pop_estimates_df['Age']-5}-{UN_countries_pop_estimates_df['Age']}")
     return population_pyramid_fig
 
 def main() -> None:
