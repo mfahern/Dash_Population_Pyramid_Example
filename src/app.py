@@ -16,10 +16,10 @@ pop_growth_multi_df = pd.read_csv('https://raw.githubusercontent.com/mfahern/Das
 population_1950_2050_df = pd.read_csv('https://raw.githubusercontent.com/mfahern/Dash_Population_Pyramid_Example/main/data/population_1950_2050.csv')
 growth_1950_2050_df = pd.read_csv('https://raw.githubusercontent.com/mfahern/Dash_Population_Pyramid_Example/main/data/growth_1950_2050.csv')
 
-pop_growth_multi_df.rename(columns={'Unnamed: 0':'Year', 'Bangladesh':'Bangladesh', 'Bangladesh.1':'Bangladesh', 'Brazil':'Brazil', 'Brazil.1':'Brazil',
-       'China':'China', 'China.1':'China', 'India':'India', 'India.1':'India', 'Indonesia':'Indonesia', 'Indonesia.1':'Indonesia',
-       'Mexico':'Mexico', 'Mexico.1':'Mexico', 'Nigeria':'Nigeria', 'Nigeria.1':'Nigeria', 'Pakistan':'Pakistan', 'Pakistan.1':'Pakistan',
-       'Russia':'Russia', 'Russia.1':'Russia', 'United States':'United States', 'United States.1':'United States'}, inplace=True)
+pop_growth_multi_df.rename(columns={'Unnamed: 0':'Year','Afghanistan':'Afghanistan', 'Afghanistan.1':'Afghanistan','Bangladesh':'Bangladesh', 'Bangladesh.1':'Bangladesh', 'Brazil':'Brazil', 'Brazil.1':'Brazil',
+       'China':'China', 'China.1':'China', 'India':'India', 'India.1':'India', 'Indonesia':'Indonesia', 'Indonesia.1':'Indonesia','Japan':'Japan','Japan.1':'Japan',
+       'Mexico':'Mexico', 'Mexico.1':'Mexico', 'Nigeria':'Nigeria', 'Nigeria.1':'Nigeria', 'Pakistan':'Pakistan', 'Pakistan.1':'Pakistan','Republic of Korea':'Republic of Korea','Republic of Korea.1':'Republic of Korea',
+       'Russian Federation':'Russian Federation', 'Russian Federation.1':'Russian Federation', 'United States of America':'United States of America', 'United States of America.1':'United States of America'}, inplace=True)
 
 app.layout = html.Div(
     style={
@@ -29,7 +29,7 @@ app.layout = html.Div(
         'margin-left':'10px',
     },
     children=[
-        dcc.Dropdown(['India','China','United States of America','Indonesia','Pakistan','Nigeria','Brazil','Bangladesh','Russia','Mexico'], 'India', id='country_dropdown'),
+        dcc.Dropdown(['Afghanistan','Bangladesh','Brazil','China','India','Indonesia','Japan','Mexico','Nigeria','Pakistan','Republic of Korea','Russian Federation','United States of America'], 'Afghanistan', id='country_dropdown'),
         html.H3("Population Pyramid"),
         html.P("UN Population Projections 2023 Midyear Medium Varient Estimates (1950-2100)"), 
         dcc.Loading(
@@ -41,6 +41,8 @@ app.layout = html.Div(
         dash_table.DataTable(
             columns=[
             {"name": ["", ""], "id":"year"},
+            {"name": ["Afghanistan", "Population"], "id":"Afghanistan_Pop"},
+            {"name": ["Afghanistan", "Growth"], "id":"Afghanistan_Growth"},
             {"name": ["Bangladesh", "Population"], "id":"Bangladesh_Pop"},
             {"name": ["Bangladesh", "Growth"], "id":"Bangladesh_Growth"},
             {"name": ["Brazil", "Population"], "id":"Brazil_Pop"},
@@ -51,12 +53,16 @@ app.layout = html.Div(
             {"name": ["India", "Growth"], "id":"India_Growth"},
             {"name": ["Indonesia", "Population"], "id":"Indonesia_Pop"},
             {"name": ["Indonesia", "Growth"], "id":"Indonesia_Growth"},
+            {"name": ["Japan", "Population"], "id":"Japan_Pop"},
+            {"name": ["Japan", "Growth"], "id":"Japan_Growth"},
             {"name": ["Mexico", "Population"], "id":"Mexico_Pop"},
             {"name": ["Mexico", "Growth"], "id":"Mexico_Growth"},
             {"name": ["Nigeria", "Population"], "id":"Nigeria_Pop"},
             {"name": ["Nigeria", "Growth"], "id":"Nigeria_Growth"},
             {"name": ["Pakistan", "Population"], "id":"Pakistan_Pop"},
             {"name": ["Pakistan", "Growth"], "id":"Pakistan_Growth"},
+            {"name": ["South Korea", "Population"], "id":"South_Korea_Pop"},
+            {"name": ["South Korea", "Growth"], "id":"South_Korea_Growth"},
             {"name": ["Russia", "Population"], "id":"Russia_Pop"},
             {"name": ["Russia", "Growth"], "id":"Russia_Growth"},
             {"name": ["United States", "Population"], "id":"United_States_Pop"},
@@ -65,6 +71,8 @@ app.layout = html.Div(
             data=[
             {
                 "year":  growth_1950_2050_df["Time"].iloc[i],
+                "Afghanistan_Pop": population_1950_2050_df["Afghanistan"].iloc[i],   
+                "Afghanistan_Growth": growth_1950_2050_df["Afghanistan"].iloc[i],
                 "Bangladesh_Pop": population_1950_2050_df["Bangladesh"].iloc[i],   
                 "Bangladesh_Growth": growth_1950_2050_df["Bangladesh"].iloc[i],
                 "Brazil_Pop": population_1950_2050_df["Brazil"].iloc[i],   
@@ -75,16 +83,20 @@ app.layout = html.Div(
                 "India_Growth": growth_1950_2050_df["India"].iloc[i],
                 "Indonesia_Pop": population_1950_2050_df["Indonesia"].iloc[i],   
                 "Indonesia_Growth": growth_1950_2050_df["Indonesia"].iloc[i],
+                "Japan_Pop": population_1950_2050_df["Japan"].iloc[i],   
+                "Japan_Growth": growth_1950_2050_df["Japan"].iloc[i],
                 "Mexico_Pop": population_1950_2050_df["Mexico"].iloc[i],   
                 "Mexico_Growth": growth_1950_2050_df["Mexico"].iloc[i],
                 "Nigeria_Pop": population_1950_2050_df["Nigeria"].iloc[i],   
                 "Nigeria_Growth": growth_1950_2050_df["Nigeria"].iloc[i],
                 "Pakistan_Pop": population_1950_2050_df["Pakistan"].iloc[i],   
                 "Pakistan_Growth": growth_1950_2050_df["Pakistan"].iloc[i],
-                "Russia_Pop": population_1950_2050_df["Russia"].iloc[i],   
-                "Russia_Growth": growth_1950_2050_df["Russia"].iloc[i],
-                "United_States_Pop": population_1950_2050_df["United States"].iloc[i],   
-                "United_States_Growth": growth_1950_2050_df["United States"].iloc[i],
+                "South_Korea_Pop": population_1950_2050_df["Republic of Korea"].iloc[i],   
+                "South_Korea_Growth": growth_1950_2050_df["Republic of Korea"].iloc[i],
+                "Russia_Pop": population_1950_2050_df["Russian Federation"].iloc[i],   
+                "Russia_Growth": growth_1950_2050_df["Russian Federation"].iloc[i],
+                "United_States_Pop": population_1950_2050_df["United States of America"].iloc[i],   
+                "United_States_Growth": growth_1950_2050_df["United States of America"].iloc[i],
             }
             for i in range(11)
             ],
@@ -94,11 +106,11 @@ app.layout = html.Div(
                 'backgroundColor': 'rgb(220, 220, 220)',
             },
             {
-                'if':{'column_id':['year','Bangladesh_Pop','China_Pop','Indonesia_Pop', 'Nigeria_Pop', 'Russia_Pop']},
+                'if':{'column_id':['year','Afghanistan_Pop','Bangladesh_Pop','China_Pop','Indonesia_Pop', 'Mexico_Pop', 'Pakistan_Pop', 'Russia_Pop']},
                 'border-left':'1px solid black',
             },
             {
-                'if':{'column_id':['Bangladesh_Growth','China_Growth','Indonesia_Growth', 'Nigeria_Growth', 'Russia_Growth', 'United_States_Growth']},
+                'if':{'column_id':['Bangladesh_Growth','China_Growth','Indonesia_Growth', 'Mexico_Growth', 'Pakistan_Growth','Russia_Growth', 'United_States_Growth']},
                 'border-right':'1px solid black',
             },
             ],
