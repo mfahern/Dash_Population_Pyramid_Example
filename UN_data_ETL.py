@@ -94,6 +94,15 @@ for country, country_df in zip(selected_countries, selected_countries_ls):
 
 UN_countries_pop_estimates = pd.concat(selected_countries_df_ls)
 
+dependent_pop_df = pysqldf("SELECT * FROM UN_countries_pop_estimates WHERE Age in (4,9,14);")
+dependent_pop_df['positive_value'] = np.select([dependent_pop_df['Sex'] == 'Male', dependent_pop_df['Sex'] == 'Female'], [dependent_pop_df['Value']*-1, dependent_pop_df['Value']])
+
+old_age_pop_df = pysqldf("SELECT * FROM UN_countries_pop_estimates WHERE Age in (69,74,79,84,89,94,99,100);")
+old_age_pop_df['positive_value'] = np.select([old_age_pop_df['Sex'] == 'Male', old_age_pop_df['Sex'] == 'Female'], [old_age_pop_df['Value']*-1, old_age_pop_df['Value']])
+
+dependent_pop_filtered_df = pysqldf("SELECT Time, SUM(positive_value) AS 'Dependent Population', Country FROM dependent_pop_df GROUP BY Country, Time;")
+old_age_pop_filtered_df = pysqldf("SELECT Time, SUM(positive_value) AS 'Old Age Population', Country FROM old_age_pop_df GROUP BY Country, Time;")
+
 working_age_growth_df = pd.DataFrame()
 working_age_growth_df = UN_countries_pop_estimates.loc[UN_countries_pop_estimates['Sex'] == 'Male']
 
@@ -102,6 +111,25 @@ working_age_growth_df['Value'] = working_age_growth_df['Value'] * -1
 working_age_growth_df = pd.concat([working_age_growth_df, UN_countries_pop_estimates.loc[UN_countries_pop_estimates['Sex'] == 'Female']])
 
 working_age_df = pysqldf("SELECT * FROM working_age_growth_df WHERE Age in (19,24,29,34,39,44,49,54,59,64);")
+
+working_age_total_df = pysqldf("Select Time, Country, SUM(Value) AS 'Working Age Population' FROM working_age_df GROUP BY Country, Time")
+
+
+# Calculate dependency ratios
+young_dependency_ratio = pd.DataFrame()
+young_dependency_ratio['Time'] = dependent_pop_filtered_df['Time']
+young_dependency_ratio['Country'] = dependent_pop_filtered_df['Country']
+young_dependency_ratio['Young to Working Age Dependency Ratio'] = (dependent_pop_filtered_df['Dependent Population']/working_age_total_df['Working Age Population']) * 100
+
+old_dependency_ratio = pd.DataFrame()
+old_dependency_ratio['Time'] = dependent_pop_filtered_df['Time']
+old_dependency_ratio['Country'] = dependent_pop_filtered_df['Country']
+old_dependency_ratio['Old to Working Age Dependency Ratio'] = (old_age_pop_filtered_df['Old Age Population']/working_age_total_df['Working Age Population']) * 100
+
+total_dependency_ratio = pd.DataFrame()
+total_dependency_ratio['Time'] = dependent_pop_filtered_df['Time']
+total_dependency_ratio['Country'] = dependent_pop_filtered_df['Country']
+total_dependency_ratio['Young and Old to Working Age Dependency Ratio'] = ((old_age_pop_filtered_df['Old Age Population']+dependent_pop_filtered_df['Dependent Population'])/working_age_total_df['Working Age Population']) * 100
 
 aggregated_working_age_growth_df = pysqldf("SELECT Time, Sex, SUM(Value) AS 'Working Age Population', Country FROM working_age_df GROUP BY Country, Time, Sex;")
 
@@ -154,12 +182,11 @@ for i in range(0, len(match_size_population_growth_ls), 2):
 population_1950_2050_df = pop_growth_multi_df.xs('Population', level=1, axis = 1)
 growth_1950_2050_df = pop_growth_multi_df.xs('Growth', level=1, axis = 1)
 
+young_dependency_ratio.to_csv('./data/young_dependency_ratio.csv')
+old_dependency_ratio.to_csv('./data/old_dependency_ratio.csv')
+total_dependency_ratio.to_csv('./data/total_dependency_ratio.csv')
+
 UN_countries_pop_estimates.to_csv('./data/UN_countries_pop_estimates.csv')
 pop_growth_multi_df.to_csv('./data/pop_growth_multi.csv')
 population_1950_2050_df.to_csv('./data/population_1950_2050.csv')
 growth_1950_2050_df.to_csv('./data/growth_1950_2050.csv')
-
-
-
-
-
