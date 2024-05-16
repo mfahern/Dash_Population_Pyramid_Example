@@ -17,9 +17,9 @@ UN_countries_pop_estimates_df = pd.read_csv('https://raw.githubusercontent.com/m
 pop_growth_multi_df = pd.read_csv('https://raw.githubusercontent.com/mfahern/Dash_Population_Pyramid_Example/main/data/pop_growth_multi.csv', skiprows=[2])
 population_1950_2050_df = pd.read_csv('https://raw.githubusercontent.com/mfahern/Dash_Population_Pyramid_Example/main/data/population_1950_2050.csv')
 growth_1950_2050_df = pd.read_csv('https://raw.githubusercontent.com/mfahern/Dash_Population_Pyramid_Example/main/data/growth_1950_2050.csv')
-young_dependency_ratio_df = pd.read_csv('./data/young_dependency_ratio.csv')
-old_dependency_ratio_df = pd.read_csv('./data/old_dependency_ratio.csv')
-total_dependency_ratio_df = pd.read_csv('./data/total_dependency_ratio.csv')
+young_dependency_ratio_df = pd.read_csv('https://raw.githubusercontent.com/mfahern/Dash_Population_Pyramid_Example/main/data/young_dependency_ratio.csv')
+old_dependency_ratio_df = pd.read_csv('https://raw.githubusercontent.com/mfahern/Dash_Population_Pyramid_Example/main/data/old_dependency_ratio.csv')
+total_dependency_ratio_df = pd.read_csv('https://raw.githubusercontent.com/mfahern/Dash_Population_Pyramid_Example/main/data/total_dependency_ratio.csv')
 
 pop_growth_multi_df.rename(columns={'Unnamed: 0':'Year','Afghanistan':'Afghanistan', 'Afghanistan.1':'Afghanistan','Bangladesh':'Bangladesh', 'Bangladesh.1':'Bangladesh', 'Brazil':'Brazil', 'Brazil.1':'Brazil',
        'China':'China', 'China.1':'China', 'India':'India', 'India.1':'India', 'Indonesia':'Indonesia', 'Indonesia.1':'Indonesia','Japan':'Japan','Japan.1':'Japan',
@@ -37,19 +37,10 @@ app.layout = html.Div(
         dcc.Dropdown(['Afghanistan','Bangladesh','Brazil','China','India','Indonesia','Japan','Mexico','Nigeria','Pakistan','Republic of Korea','Russian Federation','United States of America'], 'Afghanistan', id='country_dropdown'),
         html.H3("Population Pyramid"),
         html.P("UN Population Projections 2023 Midyear Medium Varient Estimates (1950-2100)"),
-        html.Div([
-            html.Button('Play', id='play-button', n_clicks=0),
-            html.Button('Stop', id='stop-button', n_clicks=0),
-        ]),
         dcc.Loading(
             id='loading',
             type="circle",
-            children=[
-                # dcc.Graph(id='graph'),
-                html.Div(id='message-output'),
-                dcc.Graph(id='population_pyramid_go'),
-                dcc.Graph(id='dependency_ratio_table'),
-                ],
+            children=[dcc.Graph(id='population_pyramid_go'),],
         ),
         html.H3("Working Age Population Level and Growth"),
         dash_table.DataTable(
@@ -137,17 +128,8 @@ app.layout = html.Div(
 
            merge_duplicate_headers=True,
        ),
-       
-#        dash_table.DataTable(
-#            data=population_1950_2050_df.to_dict('records')
-#        ),
-#        html.H4("Working Age Population Growth"),
-#        dash_table.DataTable(  
-#          data=growth_1950_2050_df.to_dict('records')
-#        )
     ]
 )
-
 
 def generate_frames():
     countries = sorted(list(set(UN_countries_pop_estimates_df["Country"])))
@@ -193,9 +175,6 @@ def generate_frames():
             frame = go.Frame(data=country_sex_year_goBar_fig_ls, name=year_str)
             frames_by_country_list.append(frame)
 
-            # year_dict[year_str] = country_sex_year_goBar_fig_ls
-            # all_years_frames_dict = all_years_frames_dict | year_dict
-
             slider_step = {"args": [
                     [year],
             {"frame": {"duration": 300, "redraw": False},
@@ -214,20 +193,7 @@ def generate_frames():
 
 all_countries_frames = generate_frames()
 
-# with open('tuple_test.txt', 'w') as f:
-#      print(all_countries_frames, file=f)
-
-# with open('Afghanistan.txt', 'w') as f:
-#     print(all_countries_frames['Afghanistan'], file=f)
-
-# with open('China.txt', 'w') as f:
-#     print(all_countries_frames['China'], file=f)
-
-# with open('China_1955.txt', 'w') as f:
-#     print(all_countries_frames['China']['1955'], file=f)
-
 @app.callback(
-    Output('dependency_ratio_table', 'figure'),
     Output('population_pyramid_go', 'figure'),
     Input('country_dropdown','value'),
 )
@@ -274,13 +240,6 @@ def bar_fig(value, all_countries_frames=all_countries_frames):
     population_pyramid_fig = px.bar(country_selected, x="Value", y="Age", animation_frame="Time", orientation="h", color="Sex", color_discrete_map={'Male':'#3260F2', 'Female':'#C00000'}, height=500, custom_data=['Sex','Positive_Population','Time','Open_Age_Bracket'])
     population_pyramid_fig.update_traces(width=4.9, hovertemplate=('Sex=%{customdata[0]}<br>Population=%{customdata[1]:.3f}M<br>Age=%{customdata[3]}-%{y}<extra></extra>'))
 
-
-    # with open('plotly_express_layout.txt', 'w') as f:
-    #     print(population_pyramid_fig.layout, file=f)
-
-    # with open('plotly_express_frames.txt', 'w') as f:
-    #     print(population_pyramid_fig.frames, file=f)
-
     young_dependency_ratio = young_dependency_ratio_df['Young to Working Age Dependency Ratio'].loc[young_dependency_ratio_df['Country'] == value]
     young_dependency_ratio_ls = list(young_dependency_ratio)
     old_dependency_ratio = old_dependency_ratio_df['Old to Working Age Dependency Ratio'].loc[old_dependency_ratio_df['Country'] == value]
@@ -296,10 +255,6 @@ def bar_fig(value, all_countries_frames=all_countries_frames):
 
     dependency_ratio_frames_tp = tuple(dependency_ratio_frames)
 
-    with open('dependency_ratio_table_loop_frames_tuple.txt', 'w') as f:
-        print(dependency_ratio_frames_tp, file=f)
-
-
     population_pyramid_go = go.Figure(
         data=[
             go.Bar(name='Male', x=list(country_selected_male_1950['Value']), y=list(country_selected_male_1950['Age']), orientation='h', width=4.9,  marker_color='#3260F2', customdata=country_selected_male_1950[['Positive_Population','Open_Age_Bracket']],  hovertemplate='Population: %{customdata[0]:.3f}M<br>Male Age: %{customdata[1]}-%{y}<extra></extra>', xaxis='x1', yaxis='y1'),
@@ -310,8 +265,8 @@ def bar_fig(value, all_countries_frames=all_countries_frames):
                     ['Young to Working Age','Old to Working Age','Young plus Old to Working Age'], # column 1
                     [young_dependency_ratio_ls[0],old_dependency_ratio_ls[0],total_dependency_ratio_ls[0]], # column 2
                 ], format=["", ".2f"]),
-                domain=dict(x=[0, 1],
-                            y=[.5, 1])
+                domain=dict(x=[0.15, 0.85],
+                            y=[.75, 1])
             )
         ],
         layout=go.Layout(
@@ -337,7 +292,8 @@ def bar_fig(value, all_countries_frames=all_countries_frames):
                      'yanchor': 'top'}],
             sliders=population_pyramid_fig.layout['sliders'],
             xaxis=dict(dict(domain=[0, 1], anchor='y1')),
-            yaxis=dict( dict(domain=[0, 0.5], anchor='x1')),           
+            yaxis=dict( dict(domain=[0, 0.75], anchor='x1')),
+            height=700           
         ),
          frames=all_countries_frames[value]
    
@@ -380,55 +336,9 @@ def bar_fig(value, all_countries_frames=all_countries_frames):
                      'y': 0,
                      'yanchor': 'top'}],
         ),
-        frames=dependency_ratio_frames_tp   #[
-        #     go.Frame(
-        #         data=[
-        #             go.Table(
-        #                 header=dict(values=['Dependency Ratio', 'Values']),
-        #                 cells=dict(values=[
-        #                     ['Young to Working Age','Old to Working Age','Young plus Old to Working Age'],
-        #                     [young_dependency_ratio_ls[i],old_dependency_ratio_ls[i],total_dependency_ratio_ls[i]],
-        #                 ]),
-        #             )
-        #         ],
-        #     ) for i in range(151)
-        # ]
     )
 
-    # with open('dependency_ratio_table_frames.txt', 'w') as f:
-    #     print(dependency_ratio_table.frames, file=f)
-
-    return dependency_ratio_table, population_pyramid_go
-
-@app.callback(
-    Output('message-output', 'children'),
-    # Output('dependency_ratio_table','figure'),
-    # Output('population_pyramid_go','figure'),
-    Input('play-button','n_clicks'),
-    Input('stop-button','n_clicks'),
-    Input('dependency_ratio_table','figure'),
-    Input('population_pyramid_go','figure'),
-)
-def animate_charts(play_button,stop_button,dependency_ratio_table,population_pyramid_go):
-    dependency_ratio_table = go.Figure(dependency_ratio_table)
-    population_pyramid_go = go.Figure(population_pyramid_go)
-    msg = ''
-    if 'play-button' == ctx.triggered_id:
-        msg = 'play'
-        dependency_ratio_table.update_layout(title='Pressed Play')
-        population_pyramid_go.update_layout(title='Pressed Play')
-        # print(dependency_ratio_table.type)
-        # print("test")
-        # print(population_pyramid_go.type)
-        # dependency_ratio_table.update_layout.buttons.method
-        # population_pyramid_go.update_layout.buttons.method
-    elif 'stop-button' == ctx.triggered_id:
-        msg = 'stop'
-        dependency_ratio_table.update_layout(title='Pressed Stop')
-        population_pyramid_go.update_layout(title='Pressed Stop')
-        # dependency_ratio_table.update_layout(updatemenus.active[1])
-        # population_pyramid_go.update_layout(updatemenus.active[1])
-    return html.Div(msg)#, dependency_ratio_table, population_pyramid_go
+    return population_pyramid_go
 
 def main() -> None:
     app.run_server(debug=False, host='0.0.0.0', port=8050)
