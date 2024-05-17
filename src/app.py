@@ -138,15 +138,18 @@ def generate_frames():
 
     for country in countries:     # countries
         country_selected = UN_countries_pop_estimates_df.loc[UN_countries_pop_estimates_df['Country'] == country]
-        country_selected['Open_Age_Bracket'] = country_selected['Age']-4
-        country_selected['Positive_Population'] = np.select([country_selected['Sex'] == 'Male', country_selected['Sex'] == 'Female'], [country_selected['Value']*-1, country_selected['Value']])/1000
+        country_selected.loc[:,['Open_Age_Bracket']] = country_selected['Age']-4
+        country_selected.loc[country_selected['Age'] == 100, ['Age']] = country_selected['Age'] + 4
+        country_selected.loc[country_selected['Open_Age_Bracket'] == 96, ['Open_Age_Bracket']] = country_selected['Open_Age_Bracket'] + 4
         country_selected_male = country_selected.loc[country_selected['Sex'] == 'Male']
+        country_selected_male.loc[:, ['Positive_Population']] = (country_selected_male['Value'])*-1/1000
         country_selected_female = country_selected.loc[country_selected['Sex'] == 'Female']
+        country_selected_female.loc[:, ['Positive_Population']] = country_selected_female['Value']/1000
         all_years_frames_dict = dict()
         frames_by_country_list = []
         sliders_country_dict = dict()
 
-        for year, i in zip(range(1950,2101,1), range(151)): #list(set(country_selected_male['Time'])):
+        for year, i in zip(range(1950,2101,1), range(151)):
             year_dict = dict()
             year_str = str(year)
             sliders_dict = dict()
@@ -212,31 +215,16 @@ def bar_fig(value, all_countries_frames=all_countries_frames):
         years.append(year)
 
     country_selected_male_1950 = country_selected_male.loc[country_selected_male['Time'] == 1950 ]
-    country_selected_male_1950['Open_Age_Bracket'] = country_selected_male_1950['Age']-4
-    country_selected_male_1950['Positive_Population'] = (country_selected_male_1950['Value']*-1)/1000
+    country_selected_male_1950.loc[:, ['Open_Age_Bracket']] = country_selected_male_1950['Age']-4
+    country_selected_male_1950.loc[:, ['Positive_Population']] = (country_selected_male_1950['Value']*-1)/1000
 
     country_selected_female_1950 = country_selected_female.loc[country_selected_female['Time'] == 1950]
-    country_selected_female_1950['Open_Age_Bracket'] = country_selected_female_1950['Age']-4
-    country_selected_female_1950['Positive_Population'] = country_selected_female_1950['Value']/1000
+    country_selected_female_1950.loc[:, ['Open_Age_Bracket']] = country_selected_female_1950['Age']-4
+    country_selected_female_1950.loc[:, ['Positive_Population']] = country_selected_female_1950['Value']/1000
 
-    country_selected_male_1951 = country_selected_male.loc[country_selected_male['Time'] == 1951 ]
-    country_selected_male_1951['Open_Age_Bracket'] = country_selected_male_1951['Age']-4
-    country_selected_male_1951['Positive_Population'] = (country_selected_male_1951['Value']*-1)/1000
+    country_selected.loc[:,['Open_Age_Bracket']] = country_selected['Age']-4
 
-    country_selected_female_1951 = country_selected_female.loc[country_selected_female['Time'] == 1951]
-    country_selected_female_1951['Open_Age_Bracket'] = country_selected_female_1951['Age']-4
-    country_selected_female_1951['Positive_Population'] = country_selected_female_1951['Value']/1000
-
-    country_selected_male_1952 = country_selected_male.loc[country_selected_male['Time'] == 1952 ]
-    country_selected_male_1952['Open_Age_Bracket'] = country_selected_male_1952['Age']-4
-    country_selected_male_1952['Positive_Population'] = (country_selected_male_1952['Value']*-1)/1000
-
-    country_selected_female_1952 = country_selected_female.loc[country_selected_female['Time'] == 1952]
-    country_selected_female_1952['Open_Age_Bracket'] = country_selected_female_1952['Age']-4
-    country_selected_female_1952['Positive_Population'] = country_selected_female_1952['Value']/1000
-
-    country_selected['Open_Age_Bracket'] = country_selected['Age']-4
-    country_selected['Positive_Population'] = np.select([country_selected['Sex'] == 'Male', country_selected['Sex'] == 'Female'], [country_selected['Value']*-1, country_selected['Value']])/1000
+    country_selected.loc[:, ['Positive_Population']] = np.select([country_selected['Sex'] == 'Male', country_selected['Sex'] == 'Female'], [country_selected['Value']*-1, country_selected['Value']])/1000
     population_pyramid_fig = px.bar(country_selected, x="Value", y="Age", animation_frame="Time", orientation="h", color="Sex", color_discrete_map={'Male':'#3260F2', 'Female':'#C00000'}, height=500, custom_data=['Sex','Positive_Population','Time','Open_Age_Bracket'])
     population_pyramid_fig.update_traces(width=4.9, hovertemplate=('Sex=%{customdata[0]}<br>Population=%{customdata[1]:.3f}M<br>Age=%{customdata[3]}-%{y}<extra></extra>'))
 
@@ -292,7 +280,7 @@ def bar_fig(value, all_countries_frames=all_countries_frames):
                      'yanchor': 'top'}],
             sliders=population_pyramid_fig.layout['sliders'],
             xaxis=dict(dict(domain=[0, 1], anchor='y1')),
-            yaxis=dict( dict(domain=[0, 0.75], anchor='x1')),
+            yaxis=dict( dict(domain=[0, 0.75], anchor='x1'), range=[0,105]),
             height=700           
         ),
          frames=all_countries_frames[value]
